@@ -1,5 +1,5 @@
 module.exports = {
-  extension: ['js', 'ts', 'tsx'],
+  extension: ['js', 'mjs', 'ts', 'tsx'],
   ignore: [
     '**/build/**',
     '**/node_modules/**',
@@ -8,9 +8,9 @@ module.exports = {
     'docs/.next/**',
   ],
   recursive: true,
-  timeout: (process.env.CIRCLECI === 'true' ? 3 : 2) * 1000, // Circle CI has low-performance CPUs.
+  timeout: (process.env.CIRCLECI === 'true' ? 5 : 2) * 1000, // Circle CI has low-performance CPUs.
   reporter: 'dot',
-  require: [require.resolve('./test/utils/setupBabel'), require.resolve('./test/utils/setupJSDOM')],
+  require: ['@mui/internal-test-utils/setupBabel', '@mui/internal-test-utils/setupJSDOM'],
   'watch-ignore': [
     // default
     '.git',

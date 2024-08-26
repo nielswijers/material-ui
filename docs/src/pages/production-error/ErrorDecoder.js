@@ -1,24 +1,21 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
-import Link from '@material-ui/core/Link';
-import Typography from '@material-ui/core/Typography';
-import { styled } from '@material-ui/core/styles';
-import MarkdownElement from 'docs/src/modules/components/MarkdownElement';
-import { render as renderMarkdown } from 'docs/src/modules/utils/parseMarkdown';
+import Link from '@mui/material/Link';
+import Typography from '@mui/material/Typography';
+import { styled } from '@mui/material/styles';
+import { renderMarkdown } from '@mui/internal-markdown';
+import { MarkdownElement } from '@mui/docs/MarkdownElement';
 
 const ErrorMessageSection = styled('div')({
   // reset display: block from Demo
   display: 'block',
 });
 
-// use elevation={2}
-const ErrorMessageMarkdown = styled(MarkdownElement)(({ theme }) => {
-  return {
-    boxShadow: theme.shadows['2'],
-    color: theme.palette.error.main,
-    padding: theme.spacing(1, 2),
-  };
-});
+const ErrorMessageMarkdown = styled(MarkdownElement)(({ theme }) => ({
+  boxShadow: theme.shadows['2'],
+  color: theme.palette.error.main,
+  padding: theme.spacing(1, 2),
+}));
 
 export default function ErrorDecoder() {
   const {
@@ -100,9 +97,9 @@ export default function ErrorDecoder() {
     return (
       <Typography color="error">
         Seems like we&apos;re having some issues loading the original message. Try
-        reloading the page. If the error persists please report this isse on our{' '}
+        reloading the page. If the error persists please report this issue on our{' '}
         <Link
-          href="https://github.com/mui-org/material-ui/issues/new?template=1.bug.md"
+          href="https://github.com/mui/material-ui/issues/new?template=1.bug.md"
           target="_blank"
         >
           issue tracker

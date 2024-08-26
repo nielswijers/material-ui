@@ -1,9 +1,9 @@
-import * as fse from 'fs-extra';
 import * as path from 'path';
+import * as fse from 'fs-extra';
 import * as playwright from 'playwright';
 
 async function main() {
-  const baseUrl = 'http://localhost:5000';
+  const baseUrl = 'http://localhost:5001';
   const screenshotDir = path.resolve(__dirname, './screenshots/chrome');
 
   const browser = await playwright.chromium.launch({
@@ -13,7 +13,10 @@ async function main() {
   });
   // reuse viewport from `vrtest`
   // https://github.com/nathanmarks/vrtest/blob/1185b852a6c1813cedf5d81f6d6843d9a241c1ce/src/server/runner.js#L44
-  const page = await browser.newPage({ viewport: { width: 1000, height: 700 } });
+  const page = await browser.newPage({
+    viewport: { width: 1000, height: 700 },
+    reducedMotion: 'reduce',
+  });
 
   // Block images since they slow down tests (need download).
   // They're also most likely decorative for documentation demos
@@ -27,7 +30,7 @@ async function main() {
   });
 
   // Wait for all requests to finish.
-  // This should load shared ressources such as fonts.
+  // This should load shared resources such as fonts.
   await page.goto(`${baseUrl}#no-dev`, { waitUntil: 'networkidle0' });
   // If we still get flaky fonts after awaiting this try `document.fonts.ready`
   await page.waitForSelector('[data-webfontloader="active"]', { state: 'attached' });
@@ -42,41 +45,88 @@ async function main() {
     });
   });
 
-  const routes = await page.$$eval('#tests a', (links) => {
-    return links.map((link) => {
-      return link.href;
-    });
+  let routes = await page.$$eval('#tests a', (links) => {
+    return links.map((link) => link.href);
   });
+  routes = routes.map((route) => route.replace(baseUrl, ''));
+
+  async function renderFixture(index) {
+    // Use client-side routing which is much faster than full page navigation via page.goto().
+    // Could become an issue with test isolation.
+    // If tests are flaky due to global pollution switch to page.goto(route);
+    // puppeteers built-in click() times out
+    await page.$eval(`#tests li:nth-of-type(${index + 1}) a`, (link) => {
+      link.click();
+    });
+    // Move cursor offscreen to not trigger unwanted hover effects.
+    page.mouse.move(0, 0);
+
+    const testcase = await page.waitForSelector('[data-testid="testcase"]:not([aria-busy="true"])');
+
+    return testcase;
+  }
+
+  async function takeScreenshot({ testcase, route }) {
+    const screenshotPath = path.resolve(screenshotDir, `.${route}.png`);
+    await fse.ensureDir(path.dirname(screenshotPath));
+
+    const explicitScreenshotTarget = await page.$('[data-testid="screenshot-target"]');
+    const screenshotTarget = explicitScreenshotTarget || testcase;
+
+    await screenshotTarget.screenshot({
+      path: screenshotPath,
+      type: 'png',
+      animations: 'disabled',
+    });
+  }
 
   // prepare screenshots
   await fse.emptyDir(screenshotDir);
 
   describe('visual regressions', () => {
+    beforeEach(async () => {
+      await page.evaluate(() => {
+        localStorage.clear();
+      });
+    });
+
     after(async () => {
       await browser.close();
     });
 
     routes.forEach((route, index) => {
-      it(`creates screenshots of ${route.replace(baseUrl, '')}`, async () => {
-        // Use client-side routing which is much faster than full page navigation via page.goto().
-        // Could become an issue with test isolation.
-        // If tests are flaky due to global pollution switch to page.goto(route);
-        // puppeteers built-in click() times out
-        await page.$eval(`#tests li:nth-of-type(${index + 1}) a`, (link) => {
-          link.click();
-        });
-        // Move cursor offscreen to not trigger unwanted hover effects.
-        page.mouse.move(0, 0);
+      it(`creates screenshots of ${route}`, async function test() {
+        // With the playwright inspector we might want to call `page.pause` which would lead to a timeout.
+        if (process.env.PWDEBUG) {
+          this.timeout(0);
+        }
 
-        const testcase = await page.waitForSelector(
-          '[data-testid="testcase"]:not([aria-busy="true"])',
+        const testcase = await renderFixture(index);
+        await takeScreenshot({ testcase, route });
+      });
+    });
+
+    describe('Rating', () => {
+      it('should handle focus-visible correctly', async () => {
+        const index = routes.findIndex(
+          (route) => route === '/regression-Rating/FocusVisibleRating',
         );
-        const clip = await testcase.boundingBox();
+        const testcase = await renderFixture(index);
+        await page.keyboard.press('Tab');
+        await takeScreenshot({ testcase, route: '/regression-Rating/FocusVisibleRating2' });
+        await page.keyboard.press('ArrowLeft');
+        await takeScreenshot({ testcase, route: '/regression-Rating/FocusVisibleRating3' });
+      });
 
-        const screenshotPath = path.resolve(screenshotDir, `${route.replace(baseUrl, '.')}.png`);
-        await fse.ensureDir(path.dirname(screenshotPath));
-        // Testcase.screenshot would resize the viewport to the element bbox.
-        await page.screenshot({ clip, path: screenshotPath, type: 'png' });
+      it('should handle focus-visible with precise ratings correctly', async () => {
+        const index = routes.findIndex(
+          (route) => route === '/regression-Rating/PreciseFocusVisibleRating',
+        );
+        const testcase = await renderFixture(index);
+        await page.keyboard.press('Tab');
+        await takeScreenshot({ testcase, route: '/regression-Rating/PreciseFocusVisibleRating2' });
+        await page.keyboard.press('ArrowRight');
+        await takeScreenshot({ testcase, route: '/regression-Rating/PreciseFocusVisibleRating3' });
       });
     });
   });

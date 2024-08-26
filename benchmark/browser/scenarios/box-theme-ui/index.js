@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, ThemeProvider } from 'theme-ui';
+import { Box, ThemeUIProvider } from 'theme-ui';
 
 const theme = {
   breakpoints: ['40em', '52em', '64em'],
@@ -17,7 +17,7 @@ const theme = {
 
 export default function BoxThemeUI() {
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeUIProvider theme={theme}>
       {new Array(1000).fill().map(() => (
         <Box
           sx={{
@@ -27,7 +27,7 @@ export default function BoxThemeUI() {
             borderColor: 'white',
             backgroundColor: ['primary', 'text', 'background'],
             borderStyle: ['dashed', 'solid', 'dotted'],
-            ':hover': {
+            '&:hover': {
               backgroundColor: (t) => t.colors.text,
             },
           }}
@@ -35,6 +35,6 @@ export default function BoxThemeUI() {
           test case
         </Box>
       ))}
-    </ThemeProvider>
+    </ThemeUIProvider>
   );
 }

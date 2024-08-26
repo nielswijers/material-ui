@@ -1,72 +1,78 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { withStyles, WithStyles, createStyles } from '@material-ui/core/styles';
+import { styled, Theme } from '@mui/material/styles';
 import MuiTextField, {
   FilledTextFieldProps,
   StandardTextFieldProps,
-} from '@material-ui/core/TextField';
+} from '@mui/material/TextField';
+import { selectClasses } from '@mui/material/Select';
+import { inputLabelClasses } from '@mui/material/InputLabel';
 
-const inputSyleMapping = {
-  small: 'inputSizeSmall',
-  medium: 'inputSizeMedium',
-  large: 'inputSizeLarge',
-  xlarge: 'inputSizeXlarge',
+const inputStyleMappingClasses = {
+  small: 'OnePirateTextField-inputSizeSmall',
+  medium: 'OnePirateTextField-inputSizeMedium',
+  large: 'OnePirateTextField-inputSizeLarge',
+  xlarge: 'OnePirateTextField-inputSizeXLarge',
 };
 
-const styles = (theme: any) =>
-  createStyles({
-    root: {
-      padding: 0,
-      'label + &': {
-        marginTop: theme.spacing(3),
-      },
+const classes = {
+  root: 'OnePirateTextField-root',
+  input: 'OnePirateTextField-input',
+  inputBorder: 'OnePirateTextField-inputBorder',
+};
+
+const styles = ({ theme }: { theme: Theme }) => ({
+  [`& .${classes.root}`]: {
+    padding: 0,
+    'label + &': {
+      marginTop: theme.spacing(3),
     },
-    input: {
-      minWidth: theme.spacing(6),
-      backgroundColor: theme.palette.common.white,
-      '&$disabled': {
-        backgroundColor: theme.palette.divider,
-      },
+  },
+  [`& .${classes.input}`]: {
+    minWidth: theme.spacing(6),
+    backgroundColor: theme.palette.common.white,
+    '&.Mui-disabled': {
+      backgroundColor: theme.palette.divider,
     },
-    inputBorder: {
-      border: '1px solid #e9ddd0',
-      '&:focus': {
-        borderColor: theme.palette.secondary.main,
-      },
+  },
+  [`& .${classes.inputBorder}`]: {
+    border: '1px solid #e9ddd0',
+    '&:focus': {
+      borderColor: theme.palette.secondary.main,
     },
-    disabled: {},
-    [inputSyleMapping['small']]: {
-      fontSize: 14,
-      padding: theme.spacing(1),
-      width: `calc(100% - ${theme.spacing(2)})`,
-    },
-    [inputSyleMapping['medium']]: {
-      fontSize: 16,
-      padding: theme.spacing(2),
-      width: `calc(100% - ${theme.spacing(4)})`,
-    },
-    [inputSyleMapping['large']]: {
-      fontSize: 18,
-      padding: 20,
-      width: `calc(100% - ${20 * 2}px)`,
-    },
-    [inputSyleMapping['xlarge']]: {
-      fontSize: 20,
-      padding: 25,
-      width: `calc(100% - ${25 * 2}px)`,
-    },
-    formLabel: {
-      fontSize: 18,
-    },
-    select: {
-      height: 'auto',
-      borderRadius: 0,
-    },
-    selectIcon: {
-      top: '50%',
-      marginTop: -12,
-    },
-  });
+  },
+  [`& .${inputStyleMappingClasses.small}`]: {
+    fontSize: 14,
+    padding: theme.spacing(1),
+    width: `calc(100% - ${theme.spacing(2)})`,
+  },
+  [`& .${inputStyleMappingClasses.medium}`]: {
+    fontSize: 16,
+    padding: theme.spacing(2),
+    width: `calc(100% - ${theme.spacing(4)})`,
+  },
+  [`& .${inputStyleMappingClasses.large}`]: {
+    fontSize: 18,
+    padding: 20,
+    width: `calc(100% - ${20 * 2}px)`,
+  },
+  [`& .${inputStyleMappingClasses.xlarge}`]: {
+    fontSize: 20,
+    padding: 25,
+    width: `calc(100% - ${25 * 2}px)`,
+  },
+  [`& .${inputLabelClasses.root}`]: {
+    fontSize: 18,
+  },
+  [`& .${selectClasses.select}`]: {
+    height: 'auto',
+    borderRadius: 0,
+  },
+  [`& .${selectClasses.icon}`]: {
+    top: '50%',
+    marginTop: -12,
+  },
+});
 
 export interface OnePirateTextFieldProps
   extends Omit<FilledTextFieldProps | StandardTextFieldProps, 'size'> {
@@ -74,9 +80,8 @@ export interface OnePirateTextFieldProps
   size?: 'small' | 'medium' | 'large' | 'xlarge';
 }
 
-function TextField(props: OnePirateTextFieldProps & WithStyles<typeof styles>) {
+function TextField(props: OnePirateTextFieldProps) {
   const {
-    classes,
     InputProps = {},
     InputLabelProps,
     noBorder,
@@ -97,13 +102,12 @@ function TextField(props: OnePirateTextFieldProps & WithStyles<typeof styles>) {
           root: classes.root,
           input: clsx(
             classes.input,
-            classes[inputSyleMapping[size]],
+            inputStyleMappingClasses[size],
             {
               [classes.inputBorder]: !noBorder,
             },
             InputPropsClassesInput,
           ),
-          disabled: classes.disabled,
           ...InputPropsClassesOther,
         },
         disableUnderline: true,
@@ -112,18 +116,11 @@ function TextField(props: OnePirateTextFieldProps & WithStyles<typeof styles>) {
       InputLabelProps={{
         ...InputLabelProps,
         shrink: true,
-        className: classes.formLabel,
       }}
-      SelectProps={{
-        ...SelectProps,
-        classes: {
-          select: classes.select,
-          icon: classes.selectIcon,
-        },
-      }}
+      SelectProps={SelectProps}
       {...other}
     />
   );
 }
 
-export default withStyles(styles)(TextField);
+export default styled(TextField)(styles);

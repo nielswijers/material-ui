@@ -1,20 +1,8 @@
 import * as React from 'react';
 import ReactMarkdown from 'markdown-to-jsx';
-import {
-  Theme,
-  createStyles,
-  withStyles,
-  WithStyles,
-} from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
-import Link from '@material-ui/core/Link';
-
-const styles = (theme: Theme) =>
-  createStyles({
-    listItem: {
-      marginTop: theme.spacing(1),
-    },
-  });
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Link from '@mui/material/Link';
 
 const options = {
   overrides: {
@@ -47,14 +35,11 @@ const options = {
     },
     a: { component: Link },
     li: {
-      component: withStyles(styles)((props: WithStyles<typeof styles>) => {
-        const { classes, ...other } = props;
-        return (
-          <li className={classes.listItem}>
-            <Typography component="span" {...other} />
-          </li>
-        );
-      }),
+      component: (props: any) => (
+        <Box component="li" sx={{ mt: 1 }}>
+          <Typography component="span" {...props} />
+        </Box>
+      ),
     },
   },
 };
